@@ -39,6 +39,13 @@ d_por_scored <- read.csv("./data_wrangled/d_por_scored.csv") %>%
                                                 "China", "Vanuatu")))
 ```
 
+```{r}
+d_spex_base_q2to10 <- read.csv("./data_wrangled/d_spex_base_q2to10.csv")
+
+d_spex_base_q2to10_scored <- read.csv("./data_wrangled/d_spex_base_q2to10_scored.csv") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
 
 # Porosity
 
@@ -106,6 +113,58 @@ plot_grid(por_plot_a, por_plot_b, ncol = 2)
 [not yet done]
 
 
+# Universal questions (Questions #2-10)
+
+## Overall scores
+
+```{r}
+d_spex_base_q2to10_scored_mb <- d_spex_base_q2to10_scored %>%
+  group_by(epi_ctry) %>%
+  multi_boot_standard("score") %>%
+  ungroup()
+```
+
+```{r, fig.width = 4, fig.asp = 0.6, include = T}
+spex_2to10_plot_a <- ggplot(d_spex_base_q2to10_scored,
+                            aes(x = epi_ctry, y = score, color = epi_ctry)) +
+  geom_hline(yintercept = 0*9, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*9, lty = 2, color = "black") +
+  geom_hline(yintercept = 1*9, lty = 2, color = "black") +
+  geom_jitter(height = 0.1, width = 0.4, alpha = 0.2, show.legend = F) +
+  geom_pointrange(data = d_spex_base_q2to10_scored_mb,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  fatten = 2, color = "black", show.legend = F) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = c(0*9, 0.5*9, 1*9),
+                              lab = c("~ All answers 'no'",
+                                      "~ All answers 'maybe'",
+                                      "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab),
+            color = "black", hjust = 0, nudge_y = 0.5) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 9, 1)) +
+  labs(title = "Spiritual experiences (Questions #2-10)",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", y = "Score (range: 0-9)")
+
+spex_2to10_plot_b <- ggplot(d_spex_base_q2to10_scored_mb,
+                            aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper),
+                  fatten = 4, show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 9, 1)) +
+  labs(title = "Spiritual experiences (zoomed in)",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", y = "Score (range: 0-9)")
+
+plot_grid(spex_2to10_plot_a, spex_2to10_plot_b, ncol = 2)
+```
+
+## By item
+
+[not yet done]
+
+
 # All spiritual experiences (Questions #2-23)
 
 ## Overall scores
@@ -124,5 +183,10 @@ plot_grid(por_plot_a, por_plot_b, ncol = 2)
 [not yet done]
 
 ## By item
+
+[not yet done]
+
+
+# Relationships between porosity and spiritual experience
 
 [not yet done]

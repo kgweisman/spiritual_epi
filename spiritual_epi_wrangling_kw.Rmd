@@ -2270,3 +2270,39 @@ write.csv(d_por, "data_wrangled/d_por.csv")
 write.csv(d_por_scored, "data_wrangled/d_por_scored.csv")
 ```
 
+
+# Spiritual experiences
+
+```{r}
+d_spex <- d0_epi_2 %>% 
+  select(epi_ctry, epi_subj, ends_with("_num")) %>%
+  gather(question, response, -c(epi_ctry, epi_subj)) %>%
+  mutate(question = gsub("_num", "", question)) %>%
+  left_join(var_key) %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
+
+```{r}
+d_spex_base_q2to10 <- d_spex %>%
+  filter(question %in% c("epi_2_02", "epi_2_03", "epi_2_04", "epi_2_05", 
+                         "epi_2_06", "epi_2_07", "epi_2_08", "epi_2_09",
+                         "epi_2_10")) %>%
+  select(-order) %>%
+  distinct()
+```
+
+```{r}
+d_spex_base_q2to10_scored <- d_spex_base_q2to10 %>%
+  group_by(epi_ctry, epi_subj) %>%
+  summarise(score = sum(response, na.rm = T))
+```
+
+```{r}
+write.csv(d_spex_base_q2to10, "data_wrangled/d_spex_base_q2to10.csv")
+write.csv(d_spex_base_q2to10_scored, 
+          "data_wrangled/d_spex_base_q2to10_scored.csv")
+```
+
+
+
