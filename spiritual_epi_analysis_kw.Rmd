@@ -1,0 +1,128 @@
+---
+title: "Spiritual epidemiology ANALYSIS (KW first pass)"
+subtitle: "Last updated: 2019-04-17"
+output:
+  html_notebook:
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+always_allow_html: yes
+---
+
+This is Kara's first pass at analyzing the Spiritual Epidemiology data (with data from 2019-03-08). (Note: PDF printed portrait, 80% zoom, minimum margins.)
+
+```{r global_options, include = F}
+knitr::opts_chunk$set(fig.width = 4, fig.asp = 0.67,
+                      include = F, echo = F)
+```
+
+```{r}
+library(tidyverse)
+library(langcog)
+library(psych)
+library(readxl)
+library(cowplot)
+library(lme4)
+library(lmerTest)
+library(kableExtra)
+library(lubridate)
+
+theme_set(theme_bw())
+```
+
+
+```{r}
+d_por <- read.csv("./data_wrangled/d_por.csv")
+
+d_por_scored <- read.csv("./data_wrangled/d_por_scored.csv") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
+
+
+# Porosity
+
+## Overall scores
+
+```{r}
+d_por_scored_mb <- d_por_scored %>%
+  group_by(epi_ctry) %>%
+  multi_boot_standard("score") %>%
+  ungroup() %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
+
+```{r, fig.width = 4, fig.asp = 0.6, include = T}
+por_plot_a <- ggplot(d_por_scored,
+                     aes(x = epi_ctry, y = score, color = epi_ctry)) +
+  geom_hline(yintercept = 0*16, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*16, lty = 2, color = "black") +
+  geom_hline(yintercept = 1*16, lty = 2, color = "black") +
+  geom_jitter(height = 0, width = 0.4, alpha = 0.2, show.legend = F) +
+  geom_pointrange(data = d_por_scored_mb,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  color = "black", fatten = 2) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = c(0*16, 0.5*16, 1*16),
+                              lab = c("~ All answers 'no'",
+                                      "~ All answers 'maybe'",
+                                      "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab),
+            color = "black", hjust = 0, nudge_y = 0.5) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 16, 4)) +
+  # ylim(0, 16) +
+  labs(title = "Porosity by site",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", y = "Porosity score (average response, range: 0-16)")
+
+por_plot_b <- ggplot(d_por_scored_mb,
+                     aes(x = epi_ctry, color = epi_ctry)) +
+  # geom_hline(yintercept = 0*16, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*16, lty = 2, color = "black") +
+  # geom_hline(yintercept = 1*16, lty = 2, color = "black") +
+  geom_pointrange(aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  fatten = 4, show.legend = F) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = 0.5 * 16, # c(0*16, 0.5*16, 1*16),
+                              lab = "~ All answers 'maybe'"),
+                                    # c("~ All answers 'no'",
+                                    #   "~ All answers 'maybe'",
+                                    #   "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab), 
+            color = "black", hjust = 0, nudge_y = 0.5) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 16, 4)) +
+  labs(title = "Porosity by site (zoomed in)",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", y = "Porosity score (average response, range: 0-16)")
+
+plot_grid(por_plot_a, por_plot_b, ncol = 2)
+```
+
+## By item
+
+[not yet done]
+
+
+# All spiritual experiences (Questions #2-23)
+
+## Overall scores
+
+[not yet done]
+
+## By item
+
+[not yet done]
+
+
+# Subset of spiritual experiences (roughly, voices, visions, & presence) (Questions #2-16)
+
+## Overall scores
+
+[not yet done]
+
+## By item
+
+[not yet done]
