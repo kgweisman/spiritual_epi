@@ -47,6 +47,11 @@ d_spex_base_q2to10_scored <- read.csv("./data_wrangled/d_spex_base_q2to10_scored
                                                 "China", "Vanuatu")))
 ```
 
+```{r}
+d_spex_base_q11to15 <- read.csv("data_wrangled/d_spex_base_q11to15.csv")
+d_spex_base_q11to15_scored <- read.csv("data_wrangled/d_spex_base_q11to15_scored.csv")
+```
+
 # Porosity
 
 ## Overall scores
@@ -158,6 +163,104 @@ spex_2to10_plot_b <- ggplot(d_spex_base_q2to10_scored_mb,
        x = "Site", y = "Score (range: 0-9)")
 
 plot_grid(spex_2to10_plot_a, spex_2to10_plot_b, ncol = 2)
+```
+
+## By item
+
+[not yet done]
+
+
+
+# Beings questions (Questions #11-15 + more for Thailand)
+
+## Overall scores
+
+```{r}
+d_spex_base_q11to15_scored_propall_mb <- d_spex_base_q11to15_scored %>%
+  group_by(epi_ctry) %>%
+  multi_boot_standard("score_propall", na.rm = T) %>%
+  ungroup()
+```
+
+```{r, fig.width = 4, fig.asp = 0.6, include = T}
+spex_11to15_plot_a <- ggplot(d_spex_base_q11to15_scored,
+                            aes(x = epi_ctry, y = score_propall, 
+                                color = epi_ctry)) +
+  geom_hline(yintercept = 0*1, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*1, lty = 2, color = "black") +
+  geom_hline(yintercept = 1*1, lty = 2, color = "black") +
+  geom_jitter(height = 0.02, width = 0.4, alpha = 0.2, show.legend = F) +
+  geom_pointrange(data = d_spex_base_q11to15_scored_propall_mb,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  fatten = 2, color = "black", show.legend = F) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = c(0*1, 0.5*1, 1*1),
+                              lab = c("~ All answers 'no'",
+                                      "~ All answers 'maybe'",
+                                      "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab),
+            color = "black", hjust = 0, nudge_y = 0.05) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(title = "Spiritual experiences (Questions #11-15+)",
+       subtitle = "Includes all beings for Thailand\nError bars are bootstrapped 95% CIs",
+       x = "Site", y = "Proportion score (range: 0-1)")
+
+spex_11to15_plot_b <- ggplot(d_spex_base_q11to15_scored_propall_mb,
+                            aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper),
+                  fatten = 4, show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(title = "Spiritual experiences (zoomed in)",
+       subtitle = "Includes all beings for Thailand\nError bars are bootstrapped 95% CIs",
+       x = "Site", y = "Proportion score (range: 0-1)")
+
+plot_grid(spex_11to15_plot_a, spex_11to15_plot_b, ncol = 2)
+```
+
+```{r}
+d_spex_base_q11to15_scored_first5_mb <- d_spex_base_q11to15_scored %>%
+  group_by(epi_ctry) %>%
+  multi_boot_standard("score_first5", na.rm = T) %>%
+  ungroup()
+```
+
+```{r, fig.width = 4, fig.asp = 0.6, include = T}
+spex_11to15_plot_c <- ggplot(d_spex_base_q11to15_scored,
+                            aes(x = epi_ctry, y = score_first5, 
+                                color = epi_ctry)) +
+  geom_hline(yintercept = 0*5, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*5, lty = 2, color = "black") +
+  geom_hline(yintercept = 1*5, lty = 2, color = "black") +
+  geom_jitter(height = 0.1, width = 0.4, alpha = 0.2, show.legend = F) +
+  geom_pointrange(data = d_spex_base_q11to15_scored_first5_mb,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  fatten = 2, color = "black", show.legend = F) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = c(0*5, 0.5*5, 1*5),
+                              lab = c("~ All answers 'no'",
+                                      "~ All answers 'maybe'",
+                                      "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab),
+            color = "black", hjust = 0, nudge_y = 0.25) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 5, 1)) +
+  labs(title = "Spiritual experiences (Questions #11-15+)",
+       subtitle = "Includes first five beings for all sites\nError bars are bootstrapped 95% CIs",
+       x = "Site", y = "Sum score (range: 0-5)")
+
+spex_11to15_plot_d <- ggplot(d_spex_base_q11to15_scored_first5_mb,
+                            aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper),
+                  fatten = 4, show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 5, 1)) +
+  labs(title = "Spiritual experiences (zoomed in)",
+       subtitle = "Includes first five beings for all sites\nError bars are bootstrapped 95% CIs",
+       x = "Site", y = "Sum score (range: 0-5)")
+
+plot_grid(spex_11to15_plot_c, spex_11to15_plot_d, ncol = 2)
 ```
 
 ## By item
