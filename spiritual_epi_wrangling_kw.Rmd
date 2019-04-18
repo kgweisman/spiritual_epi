@@ -172,8 +172,7 @@ d0_epi_2 <- d00 %>%
                  epi_2_thl12a, epi_2_thl12b, epi_2_thl12c, epi_2_thl12d,
                  epi_2_thl12e, epi_2_thl12f, epi_2_thl12g, epi_2_thl12h,
                  epi_2_thl12i, epi_2_thl12j, epi_2_thl12k,
-                 epi_2_thl14a, epi_2_thl14b, epi_2_thl14c, epi_2_thl14d,
-                 epi_2_thl14e, `epi_2_thl#0`, epi_2_thl15, epi_2_thl24),
+                 `epi_2_thl#0`, epi_2_thl15, epi_2_thl24),
             funs(num = as.numeric(.),
                  cat = recode_factor(as.character(.),
                                      "0" = "no",
@@ -214,8 +213,7 @@ d0_epi_2 <- d00 %>%
             epi_2_thl12a, epi_2_thl12b, epi_2_thl12c, epi_2_thl12d,
             epi_2_thl12e, epi_2_thl12f, epi_2_thl12g, epi_2_thl12h,
             epi_2_thl12i, epi_2_thl12j, epi_2_thl12k,
-            epi_2_thl14a, epi_2_thl14b, epi_2_thl14c, epi_2_thl14d,
-            epi_2_thl14e, `epi_2_thl#0`, epi_2_thl15, epi_2_thl24)) %>%
+            `epi_2_thl#0`, epi_2_thl15, epi_2_thl24)) %>%
   # response options: 0-15 min (1) / 15-30 min (2) / 30-60 min (3) / More than 1 hour (4)
   mutate_at(vars(epi_2_01a),
             funs(epi_2_01a_cat = factor(epi_2_01a,
@@ -2141,7 +2139,11 @@ d0_epi_2 <- d00 %>%
                  # VUT
                  epi_2_vut11a_1:epi_2_vut11a_8, epi_2_vut12a_1:epi_2_vut12a_8, 
                  epi_2_vut13a_1:epi_2_vut13a_8, epi_2_vut14a_1:epi_2_vut14a_8, 
-                 epi_2_vut15a_1:epi_2_vut15a_8),
+                 epi_2_vut15a_1:epi_2_vut15a_8,
+                 
+                 # THL
+                 epi_2_thl14a, epi_2_thl14b, epi_2_thl14c, epi_2_thl14d,
+                 epi_2_thl14e),
             funs(num = as.numeric(. %>% replace_na("0")),
                  cat = recode_factor(. %>% replace_na("0"),
                                      "0" = "no",
@@ -2166,7 +2168,11 @@ d0_epi_2 <- d00 %>%
             # VUT
             epi_2_vut11a_1:epi_2_vut11a_8, epi_2_vut12a_1:epi_2_vut12a_8, 
             epi_2_vut13a_1:epi_2_vut13a_8, epi_2_vut14a_1:epi_2_vut14a_8, 
-            epi_2_vut15a_1:epi_2_vut15a_8))
+            epi_2_vut15a_1:epi_2_vut15a_8,
+            
+            # THL
+            epi_2_thl14a, epi_2_thl14b, epi_2_thl14c, epi_2_thl14d,
+            epi_2_thl14e))
 # gather(question, response, -c(epi_batc, epi_ctry, epi_subj)) %>%
 # arrange(epi_ctry, epi_subj, epi_batc, question) %>%
 # mutate(qtype1 = case_when(grepl("a_", question) |
@@ -2304,5 +2310,105 @@ write.csv(d_spex_base_q2to10_scored,
           "data_wrangled/d_spex_base_q2to10_scored.csv")
 ```
 
+```{r}
+d_spex_base_q11to15 <- d_spex %>%
+  filter(question %in% c(
+    # USA
+    "epi_2_usa11", "epi_2_usa12", "epi_2_usa13", "epi_2_usa14", "epi_2_usa15",
+    # GHA
+    "epi_2_gha11", "epi_2_gha12", "epi_2_gha13", "epi_2_gha14", "epi_2_gha15",
+    # CHN
+    "epi_2_chn11", "epi_2_chn12", "epi_2_chn13", "epi_2_chn14", "epi_2_chn15",
+    # VUT
+    "epi_2_vut11", "epi_2_vut12", "epi_2_vut13", "epi_2_vut14", "epi_2_vut15",
+    # THL
+    "epi_2_thl11", "epi_2_thl12a", "epi_2_thl12b", "epi_2_thl12c", 
+    "epi_2_thl12d", "epi_2_thl12e", "epi_2_thl12f", "epi_2_thl12g", 
+    "epi_2_thl12h", "epi_2_thl12i", "epi_2_thl12j", "epi_2_thl12k")) %>%
+  mutate(question_univ0 = case_when(
+    question %in% c("epi_2_usa11", "epi_2_gha11", "epi_2_chn11", 
+                    "epi_2_vut11", "epi_2_thl11") ~ "being01",
+    question %in% c("epi_2_usa12", "epi_2_gha12", "epi_2_chn12", 
+                    "epi_2_vut12", "epi_2_thl12a") ~ "being02",
+    question %in% c("epi_2_usa13", "epi_2_gha13", "epi_2_chn13", 
+                    "epi_2_vut13", "epi_2_thl12b") ~ "being03",
+    question %in% c("epi_2_usa14", "epi_2_gha14", "epi_2_chn14", 
+                    "epi_2_vut14", "epi_2_thl12c") ~ "being04",
+    question %in% c("epi_2_usa15", "epi_2_gha15", "epi_2_chn15", 
+                    "epi_2_vut15", "epi_2_thl12d") ~ "being05",
+    question == "epi_2_thl12e" ~ "being06",
+    question == "epi_2_thl12f" ~ "being07",
+    question == "epi_2_thl12g" ~ "being08",
+    question == "epi_2_thl12h" ~ "being09",
+    question == "epi_2_thl12i" ~ "being10",
+    question == "epi_2_thl12j" ~ "being11",
+    question == "epi_2_thl12k" ~ "being12")) %>%
+  mutate(question_univ1 = case_when(
+    question %in% c("epi_2_usa11", "epi_2_gha11", "epi_2_chn11",
+                    "epi_2_vut11") ~ "demon",
+    question %in% c("epi_2_usa12", "epi_2_chn12") ~ "ghost",
+    question %in% c("epi_2_usa13") ~ "dead",
+    question %in% c("epi_2_usa14") ~ "nature spirit",
+    question %in% c("epi_2_usa15", "epi_2_gha15", "epi_2_chn15") ~ "witch",
+    question %in% c("epi_2_gha12", "epi_2_thl12j") ~ "angel",
+    question %in% c("epi_2_gha13") ~ "ghost/ancestor",
+    question %in% c("epi_2_gha14") ~ "abasom/maame water/dwarf",
+    question %in% c("epi_2_chn13", "epi_2_thl12k") ~ "dead relative/ancestor",
+    question %in% c("epi_2_chn14") ~ "animal spirit",
+    question %in% c("epi_2_vut12") ~ "spirit of an ancestor/place",
+    question %in% c("epi_2_vut13") ~ "spirit/ghost of a dead man/woman",
+    question %in% c("epi_2_vut14") ~ "devil/dwarf",
+    question %in% c("epi_2_vut15") ~ "witch/sorcerer/black magicker",
+    question %in% c("epi_2_thl11") ~ "spirits in general",
+    question %in% c("epi_2_thl12a") ~ "satan",
+    question %in% c("epi_2_thl12b") ~ "devil",
+    question %in% c("epi_2_thl12c") ~ "pii bpob (cannibalistic female spirit)",
+    question %in% c("epi_2_thl12d") ~ "pii ga",
+    question %in% c("epi_2_thl12e") ~ "place spirit",
+    question %in% c("epi_2_thl12f") ~ "home spirit",
+    question %in% c("epi_2_thl12g") ~ "pii dip",
+    question %in% c("epi_2_thl12h") ~ "forest spirit",
+    question %in% c("epi_2_thl12i") ~ "died spirit (had a bad death)"
+  )) %>%
+  mutate(question_univ2 = case_when(
+    question %in% c("epi_2_usa11", "epi_2_gha11", "epi_2_chn11", "epi_2_vut11", 
+                    "epi_2_vut14", "epi_2_thl12a", "epi_2_thl12b") 
+    ~ "demon/devil/satan",
+    question %in% c("epi_2_usa12", "epi_2_chn12", "epi_2_usa13", "epi_2_gha13",
+                    "epi_2_chn13", "epi_2_thl12k", "epi_2_vut12", "epi_2_vut13",
+                    "epi_2_thl12i") 
+    ~ "ghost/dead/ancestor",
+    question %in% c("epi_2_usa14", "epi_2_thl12e", "epi_2_thl12f", 
+                    "epi_2_thl12h") 
+    ~ "nature/place spirit",
+    question %in% c("epi_2_usa15", "epi_2_gha15", "epi_2_chn15", "epi_2_vut15") 
+    ~ "witch/sorcerer",
+    question %in% c("epi_2_gha12", "epi_2_thl12j") ~ "angel",
+    question %in% c("epi_2_gha14", "epi_2_chn14", "epi_2_thl11", 
+                    "epi_2_thl12c", "epi_2_thl12d", "epi_2_thl12g") 
+    ~ "other/general")) %>%
+  select(-order) %>%
+  distinct()
+```
+
+```{r}
+d_spex_base_q11to15_scored <- d_spex_base_q11to15 %>%
+  filter(question_univ0 %in% 
+           c("being01", "being02", "being03", "being04", "being05")) %>%
+  group_by(epi_ctry, epi_subj) %>%
+  summarise(score_first5 = sum(response, na.rm = T)) %>%
+  ungroup() %>% 
+  full_join(d_spex_base_q11to15 %>%
+              group_by(epi_ctry, epi_subj) %>%
+              summarise(score_propall = mean(response, na.rm = T)) %>%
+              ungroup()) %>%
+  ungroup()
+```
+
+```{r}
+write.csv(d_spex_base_q11to15, "data_wrangled/d_spex_base_q11to15.csv")
+write.csv(d_spex_base_q11to15_scored,
+          "data_wrangled/d_spex_base_q11to15_scored.csv")
+```
 
 
