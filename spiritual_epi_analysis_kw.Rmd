@@ -1,6 +1,6 @@
 ---
 title: "Spiritual epidemiology ANALYSIS (KW first pass)"
-subtitle: "Last updated: 2019-04-17"
+subtitle: "Last updated: 2019-04-18"
 output:
   html_notebook:
     toc: yes
@@ -32,24 +32,67 @@ theme_set(theme_bw())
 
 
 ```{r}
-d_por <- read.csv("./data_wrangled/d_por.csv")
+d_por <- read.csv("./data_wrangled/d_por.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
 
-d_por_scored <- read.csv("./data_wrangled/d_por_scored.csv") %>%
+d_por_scored <- read.csv("./data_wrangled/d_por_scored.csv", row.names = "X") %>%
   mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
                                                 "China", "Vanuatu")))
 ```
 
 ```{r}
-d_spex_base_q2to10 <- read.csv("./data_wrangled/d_spex_base_q2to10.csv")
+d_spex_base_q2to23 <- read.csv("./data_wrangled/d_spex_base_q2to23.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
 
-d_spex_base_q2to10_scored <- read.csv("./data_wrangled/d_spex_base_q2to10_scored.csv") %>%
+d_spex_base_q2to23_scored_propall <- read.csv("./data_wrangled/d_spex_base_q2to23_scored_propall.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+
+d_spex_base_q2to23_scored_first5 <- read.csv("./data_wrangled/d_spex_base_q2to23_scored_first5.csv", row.names = "X") %>%
   mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
                                                 "China", "Vanuatu")))
 ```
 
 ```{r}
-d_spex_base_q11to15 <- read.csv("data_wrangled/d_spex_base_q11to15.csv")
-d_spex_base_q11to15_scored <- read.csv("data_wrangled/d_spex_base_q11to15_scored.csv")
+d_spex_base_q2to10 <- read.csv("./data_wrangled/d_spex_base_q2to10.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+
+d_spex_base_q2to10_scored <- read.csv("./data_wrangled/d_spex_base_q2to10_scored.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
+
+```{r}
+d_spex_base_q11to15 <- read.csv("data_wrangled/d_spex_base_q11to15.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+
+d_spex_base_q11to15_scored <- read.csv("data_wrangled/d_spex_base_q11to15_scored.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
+
+```{r}
+d_spex_base_q16to21 <- read.csv("data_wrangled/d_spex_base_q16to21.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+
+d_spex_base_q16to21_scored <- read.csv("data_wrangled/d_spex_base_q16to21_scored.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
+
+```{r}
+d_spex_base_q22to23 <- read.csv("data_wrangled/d_spex_base_q22to23.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+
+d_spex_base_q22to23_scored <- read.csv("data_wrangled/d_spex_base_q22to23_scored.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
 ```
 
 # Porosity
@@ -78,7 +121,8 @@ por_plot_a <- ggplot(d_por_scored,
   geom_text(data = data.frame(x = 0.5,
                               y = c(0*16, 0.5*16, 1*16),
                               lab = c("~ All answers 'no'",
-                                      "~ All answers 'maybe'",
+                                      "", 
+                                      # "~ All answers 'maybe'",
                                       "~ All answers 'yes'")),
             aes(x = x, y = y, label = lab),
             color = "black", hjust = 0, nudge_y = 0.5) +
@@ -96,14 +140,14 @@ por_plot_b <- ggplot(d_por_scored_mb,
   # geom_hline(yintercept = 1*16, lty = 2, color = "black") +
   geom_pointrange(aes(y = mean, ymin = ci_lower, ymax = ci_upper),
                   fatten = 4, show.legend = F) +
-  geom_text(data = data.frame(x = 0.5,
-                              y = 0.5 * 16, # c(0*16, 0.5*16, 1*16),
-                              lab = "~ All answers 'maybe'"),
-                                    # c("~ All answers 'no'",
-                                    #   "~ All answers 'maybe'",
-                                    #   "~ All answers 'yes'")),
-            aes(x = x, y = y, label = lab), 
-            color = "black", hjust = 0, nudge_y = 0.5) +
+  # geom_text(data = data.frame(x = 0.5,
+  #                             y = 0.5 * 16, # c(0*16, 0.5*16, 1*16),
+  #                             lab = "~ All answers 'maybe'"),
+  #                                   # c("~ All answers 'no'",
+  #                                   #   "~ All answers 'maybe'",
+  #                                   #   "~ All answers 'yes'")),
+  #           aes(x = x, y = y, label = lab), 
+  #           color = "black", hjust = 0, nudge_y = 0.5) +
   scale_color_brewer(palette = "Dark2") +
   scale_y_continuous(breaks = seq(0, 16, 4)) +
   labs(title = "Porosity by site (zoomed in)",
@@ -118,7 +162,7 @@ plot_grid(por_plot_a, por_plot_b, ncol = 2)
 [not yet done]
 
 
-# Universal questions (Questions #2-10)
+# Universal questions, set 1 (Questions #2-10)
 
 ## Overall scores
 
@@ -142,7 +186,8 @@ spex_2to10_plot_a <- ggplot(d_spex_base_q2to10_scored,
   geom_text(data = data.frame(x = 0.5,
                               y = c(0*9, 0.5*9, 1*9),
                               lab = c("~ All answers 'no'",
-                                      "~ All answers 'maybe'",
+                                      "",
+                                      # "~ All answers 'maybe'",
                                       "~ All answers 'yes'")),
             aes(x = x, y = y, label = lab),
             color = "black", hjust = 0, nudge_y = 0.5) +
@@ -196,7 +241,8 @@ spex_11to15_plot_a <- ggplot(d_spex_base_q11to15_scored,
   geom_text(data = data.frame(x = 0.5,
                               y = c(0*1, 0.5*1, 1*1),
                               lab = c("~ All answers 'no'",
-                                      "~ All answers 'maybe'",
+                                      "",
+                                      # "~ All answers 'maybe'",
                                       "~ All answers 'yes'")),
             aes(x = x, y = y, label = lab),
             color = "black", hjust = 0, nudge_y = 0.05) +
@@ -240,7 +286,8 @@ spex_11to15_plot_c <- ggplot(d_spex_base_q11to15_scored,
   geom_text(data = data.frame(x = 0.5,
                               y = c(0*5, 0.5*5, 1*5),
                               lab = c("~ All answers 'no'",
-                                      "~ All answers 'maybe'",
+                                      "",
+                                      # "~ All answers 'maybe'",
                                       "~ All answers 'yes'")),
             aes(x = x, y = y, label = lab),
             color = "black", hjust = 0, nudge_y = 0.25) +
@@ -268,18 +315,212 @@ plot_grid(spex_11to15_plot_c, spex_11to15_plot_d, ncol = 2)
 [not yet done]
 
 
-# All spiritual experiences (Questions #2-23)
+# Universal questions, set 2 (Questions #16-21)
 
 ## Overall scores
 
-[not yet done]
+```{r}
+d_spex_base_q16to21_scored_mb <- d_spex_base_q16to21_scored %>%
+  group_by(epi_ctry) %>%
+  multi_boot_standard("score") %>%
+  ungroup()
+```
+
+```{r, fig.width = 4, fig.asp = 0.6, include = T}
+spex_q16to21_plot_a <- ggplot(d_spex_base_q16to21_scored,
+                            aes(x = epi_ctry, y = score, color = epi_ctry)) +
+  geom_hline(yintercept = 0*6, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*6, lty = 2, color = "black") +
+  geom_hline(yintercept = 1*6, lty = 2, color = "black") +
+  geom_jitter(height = 0.2, width = 0.4, alpha = 0.2, show.legend = F) +
+  geom_pointrange(data = d_spex_base_q16to21_scored_mb,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  fatten = 2, color = "black", show.legend = F) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = c(0*6, 0.5*6, 1*6),
+                              lab = c("~ All answers 'no'",
+                                      "",
+                                      # "~ All answers 'maybe'",
+                                      "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab),
+            color = "black", hjust = 0, nudge_y = 0.25) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 6, 1)) +
+  labs(title = "Spiritual experiences (Questions #16-21)",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", y = "Score (range: 0-6)")
+
+spex_q16to21_plot_b <- ggplot(d_spex_base_q16to21_scored_mb,
+                            aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper),
+                  fatten = 4, show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 6, 1)) +
+  labs(title = "Spiritual experiences (zoomed in)",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", y = "Score (range: 0-6)")
+
+plot_grid(spex_q16to21_plot_a, spex_q16to21_plot_b, ncol = 2)
+```
 
 ## By item
 
 [not yet done]
 
 
-# Subset of spiritual experiences (roughly, voices, visions, & presence) (Questions #2-16)
+# Universal questions, set 3 (Questions #22-23)
+
+## Overall scores
+
+```{r}
+d_spex_base_q22to23_scored_mb <- d_spex_base_q22to23_scored %>%
+  group_by(epi_ctry) %>%
+  multi_boot_standard("score") %>%
+  ungroup()
+```
+
+```{r, fig.width = 4, fig.asp = 0.6, include = T}
+spex_q22to23_plot_a <- ggplot(d_spex_base_q22to23_scored,
+                            aes(x = epi_ctry, y = score, color = epi_ctry)) +
+  geom_hline(yintercept = 0*2, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*2, lty = 2, color = "black") +
+  geom_hline(yintercept = 1*2, lty = 2, color = "black") +
+  geom_jitter(height = 0.2, width = 0.4, alpha = 0.2, show.legend = F) +
+  geom_pointrange(data = d_spex_base_q22to23_scored_mb,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  fatten = 2, color = "black", show.legend = F) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = c(0*2, 0.5*2, 1*2),
+                              lab = c("~ All answers 'no'",
+                                      "",
+                                      # "~ All answers 'maybe'",
+                                      "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab),
+            color = "black", hjust = 0, nudge_y = 0.1) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 2, 1)) +
+  labs(title = "Spiritual experiences (Questions #22-23)",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", y = "Score (range: 0-2)")
+
+spex_q22to23_plot_b <- ggplot(d_spex_base_q22to23_scored_mb,
+                            aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper),
+                  fatten = 4, show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 2, 1)) +
+  labs(title = "Spiritual experiences (zoomed in)",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", y = "Score (range: 0-2)")
+
+plot_grid(spex_q22to23_plot_a, spex_q22to23_plot_b, ncol = 2)
+```
+
+## By item
+
+[not yet done]
+
+
+# All spiritual experiences (Questions #2-23)
+
+## Overall scores
+
+```{r}
+d_spex_base_q2to23_scored_propall_mb <- d_spex_base_q2to23_scored_propall %>%
+  group_by(epi_ctry) %>%
+  multi_boot_standard("score") %>%
+  ungroup()
+```
+
+```{r, fig.width = 4, fig.asp = 0.6, include = T}
+spex_q2to23_plot_a <- ggplot(d_spex_base_q2to23_scored_propall,
+                            aes(x = epi_ctry, y = score, 
+                                color = epi_ctry)) +
+  geom_hline(yintercept = 0*1, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*1, lty = 2, color = "black") +
+  geom_hline(yintercept = 1*1, lty = 2, color = "black") +
+  geom_jitter(height = 0, width = 0.4, alpha = 0.2, show.legend = F) +
+  geom_pointrange(data = d_spex_base_q2to23_scored_propall_mb,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  fatten = 2, color = "black", show.legend = F) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = c(0*1, 0.5*1, 1*1),
+                              lab = c("~ All answers 'no'",
+                                      "",
+                                      # "~ All answers 'maybe'",
+                                      "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab),
+            color = "black", hjust = 0, nudge_y = 0.05) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 1, 0.1)) +
+  labs(title = "Spiritual experiences (Questions #2-23)",
+       subtitle = "Includes all beings for Thailand\nError bars are bootstrapped 95% CIs",
+       x = "Site", y = "Proportion score (range: 0-1)")
+
+spex_q2to23_plot_b <- ggplot(d_spex_base_q2to23_scored_propall_mb,
+                            aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper),
+                  fatten = 4, show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 1, 0.1)) +
+  labs(title = "Spiritual experiences (zoomed in)",
+       subtitle = "Includes all beings for Thailand\nError bars are bootstrapped 95% CIs",
+       x = "Site", y = "Proportion score (range: 0-1)")
+
+plot_grid(spex_q2to23_plot_a, spex_q2to23_plot_b, ncol = 2)
+```
+
+```{r}
+d_spex_base_q2to23_scored_first5_mb <- d_spex_base_q2to23_scored_first5 %>%
+  group_by(epi_ctry) %>%
+  multi_boot_standard("score") %>%
+  ungroup()
+```
+
+```{r, fig.width = 4, fig.asp = 0.6, include = T}
+spex_q2to23_plot_c <- ggplot(d_spex_base_q2to23_scored_first5,
+                            aes(x = epi_ctry, y = score, 
+                                color = epi_ctry)) +
+  geom_hline(yintercept = 0*22, lty = 2, color = "black") +
+  geom_hline(yintercept = 0.5*22, lty = 2, color = "black") +
+  geom_hline(yintercept = 1*22, lty = 2, color = "black") +
+  geom_jitter(height = 0, width = 0.4, alpha = 0.2, show.legend = F) +
+  geom_pointrange(data = d_spex_base_q2to23_scored_first5_mb,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  fatten = 2, color = "black", show.legend = F) +
+  geom_text(data = data.frame(x = 0.5,
+                              y = c(0*22, 0.5*22, 1*22),
+                              lab = c("~ All answers 'no'",
+                                      "",
+                                      # "~ All answers 'maybe'",
+                                      "~ All answers 'yes'")),
+            aes(x = x, y = y, label = lab),
+            color = "black", hjust = 0, nudge_y = 1) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 22, 2)) +
+  labs(title = "Spiritual experiences (Questions #2-23)",
+       subtitle = "Includes first five beings for all sites\nError bars are bootstrapped 95% CIs",
+       x = "Site", y = "Sum score (range: 0-22)")
+
+spex_q2to23_plot_d <- ggplot(d_spex_base_q2to23_scored_first5_mb,
+                            aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper),
+                  fatten = 4, show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 22, 2)) +
+  labs(title = "Spiritual experiences (zoomed in)",
+       subtitle = "Includes first five beings for all sites\nError bars are bootstrapped 95% CIs",
+       x = "Site", y = "Sum score (range: 0-22)")
+
+plot_grid(spex_q2to23_plot_c, spex_q2to23_plot_d, ncol = 2)
+```
+
+## By item
+
+[not yet done]
+
+
+# Subset of spiritual experiences (roughly, voices, visions, & presence) (Questions #2-16?)
 
 ## Overall scores
 
@@ -293,3 +534,61 @@ plot_grid(spex_11to15_plot_c, spex_11to15_plot_d, ncol = 2)
 # Relationships between porosity and spiritual experience
 
 [not yet done]
+
+```{r}
+d_por_spex_base_q2to23 <- d_spex_base_q2to23_scored_first5 %>% 
+  rename(spex_score_first5 = score) %>%
+  full_join(d_por_scored %>% rename(por_score = score))
+```
+
+```{r, fig.width = 4, fig.asp = 0.3, include = T}
+ggplot(d_por_spex_base_q2to23,
+       aes(x = por_score, y = spex_score_first5, color = epi_ctry)) +
+  facet_grid(~ epi_ctry) +
+  geom_point(alpha = 0.2, show.legend = F) +
+  geom_smooth(method = "lm", color = "black", show.legend = F) +
+  scale_x_continuous(breaks = seq(0, 16, 4)) +
+  scale_y_continuous(breaks = seq(0, 22, 4)) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(title = "Relationship between porosity and spiritual experience",
+       x = "Porosity score (0-16)",
+       y = "Spiritual experience score (0-22)")
+```
+
+```{r, fig.width = 4, fig.asp = 0.3, include = T}
+ggplot(d_por_spex_base_q2to23 %>%
+         group_by(epi_ctry) %>%
+         mutate(por_score_std = scale(por_score),
+                spex_score_first5_std = scale(spex_score_first5)),
+       aes(x = por_score_std, y = spex_score_first5_std, color = epi_ctry)) +
+  facet_wrap(~ epi_ctry, ncol = 5, scales = "free") +
+  geom_point(alpha = 0.2, show.legend = F) +
+  geom_smooth(method = "lm", color = "black", show.legend = F) +
+  # scale_x_continuous(breaks = seq(0, 16, 4)) +
+  # scale_y_continuous(breaks = seq(0, 22, 4)) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(title = "Relationship between porosity and spiritual experience",
+       x = "Porosity score (standardized within each site)",
+       y = "Spiritual experience score\n(standardized within each site)")
+```
+
+```{r, fig.width = 4, fig.asp = 0.35, include = T}
+ggplot(d_por_spex_base_q2to23 %>%
+         group_by(epi_ctry) %>%
+         mutate(por_score_std = scale(por_score),
+                spex_score_first5_std = scale(spex_score_first5)) %>%
+         filter(abs(por_score_std) < 2,
+                abs(spex_score_first5_std) < 2),
+       aes(x = por_score_std, y = spex_score_first5_std, color = epi_ctry)) +
+  facet_wrap(~ epi_ctry, ncol = 5) +
+  geom_point(alpha = 0.2, show.legend = F) +
+  geom_smooth(method = "lm", color = "black", show.legend = F) +
+  # scale_x_continuous(breaks = seq(0, 16, 4)) +
+  # scale_y_continuous(breaks = seq(0, 22, 4)) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(title = "Relationship between porosity and spiritual experience",
+       subtitle = "Excluding outliers (z > 2 or z < -2)",
+       x = "Porosity score (standardized within each site)",
+       y = "Spiritual experience score\n(standardized within each site)")
+```
+

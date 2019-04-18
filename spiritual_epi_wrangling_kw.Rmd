@@ -2290,6 +2290,54 @@ d_spex <- d0_epi_2 %>%
 ```
 
 ```{r}
+d_spex_base_q2to23 <- d_spex %>%
+  filter(question %in% c(
+    # universal set 1
+    "epi_2_02", "epi_2_03", "epi_2_04", "epi_2_05", "epi_2_06", "epi_2_07", 
+    "epi_2_08", "epi_2_09", "epi_2_10", 
+    # beings
+    # USA
+    "epi_2_usa11", "epi_2_usa12", "epi_2_usa13", "epi_2_usa14", "epi_2_usa15",
+    # GHA
+    "epi_2_gha11", "epi_2_gha12", "epi_2_gha13", "epi_2_gha14", "epi_2_gha15",
+    # CHN
+    "epi_2_chn11", "epi_2_chn12", "epi_2_chn13", "epi_2_chn14", "epi_2_chn15",
+    # VUT
+    "epi_2_vut11", "epi_2_vut12", "epi_2_vut13", "epi_2_vut14", "epi_2_vut15",
+    # THL
+    "epi_2_thl11", "epi_2_thl12a", "epi_2_thl12b", "epi_2_thl12c", 
+    "epi_2_thl12d", "epi_2_thl12e", "epi_2_thl12f", "epi_2_thl12g", 
+    "epi_2_thl12h", "epi_2_thl12i", "epi_2_thl12j", "epi_2_thl12k",
+    # universal set 2
+    "epi_2_16", "epi_2_17", "epi_2_18", "epi_2_19", "epi_2_20", "epi_2_21",
+    # universal set 3
+    "epi_2_22", "epi_2_23")) %>%
+  select(-order) %>%
+  distinct()
+```
+
+```{r}
+d_spex_base_q2to23_scored_propall <- d_spex_base_q2to23 %>%
+  group_by(epi_ctry, epi_subj) %>%
+  summarise(score = mean(response, na.rm = T))
+
+d_spex_base_q2to23_scored_first5 <- d_spex_base_q2to23 %>%
+  filter(!question %in% c("epi_2_thl12e", "epi_2_thl12f", "epi_2_thl12g",
+                          "epi_2_thl12h", "epi_2_thl12i", "epi_2_thl12j",
+                          "epi_2_thl12k")) %>%
+  group_by(epi_ctry, epi_subj) %>%
+  summarise(score = sum(response, na.rm = T))
+```
+
+```{r}
+write.csv(d_spex_base_q2to23, "data_wrangled/d_spex_base_q2to23.csv")
+write.csv(d_spex_base_q2to23_scored_propall, 
+          "data_wrangled/d_spex_base_q2to23_scored_propall.csv")
+write.csv(d_spex_base_q2to23_scored_first5, 
+          "data_wrangled/d_spex_base_q2to23_scored_first5.csv")
+```
+
+```{r}
 d_spex_base_q2to10 <- d_spex %>%
   filter(question %in% c("epi_2_02", "epi_2_03", "epi_2_04", "epi_2_05", 
                          "epi_2_06", "epi_2_07", "epi_2_08", "epi_2_09",
@@ -2411,4 +2459,42 @@ write.csv(d_spex_base_q11to15_scored,
           "data_wrangled/d_spex_base_q11to15_scored.csv")
 ```
 
+```{r}
+d_spex_base_q16to21 <- d_spex %>%
+  filter(question %in% c("epi_2_16", "epi_2_17", "epi_2_18", "epi_2_19",
+                         "epi_2_20", "epi_2_21")) %>%
+  select(-order) %>%
+  distinct()
+```
+
+```{r}
+d_spex_base_q16to21_scored <- d_spex_base_q16to21 %>%
+  group_by(epi_ctry, epi_subj) %>%
+  summarise(score = sum(response, na.rm = T))
+```
+
+```{r}
+write.csv(d_spex_base_q16to21, "data_wrangled/d_spex_base_q16to21.csv")
+write.csv(d_spex_base_q16to21_scored, 
+          "data_wrangled/d_spex_base_q16to21_scored.csv")
+```
+
+```{r}
+d_spex_base_q22to23 <- d_spex %>%
+  filter(question %in% c("epi_2_22", "epi_2_23")) %>%
+  select(-order) %>%
+  distinct()
+```
+
+```{r}
+d_spex_base_q22to23_scored <- d_spex_base_q22to23 %>%
+  group_by(epi_ctry, epi_subj) %>%
+  summarise(score = sum(response, na.rm = T))
+```
+
+```{r}
+write.csv(d_spex_base_q22to23, "data_wrangled/d_spex_base_q22to23.csv")
+write.csv(d_spex_base_q22to23_scored, 
+          "data_wrangled/d_spex_base_q22to23_scored.csv")
+```
 
