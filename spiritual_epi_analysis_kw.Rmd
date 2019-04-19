@@ -1,6 +1,6 @@
 ---
 title: "Spiritual epidemiology ANALYSIS (KW first pass)"
-subtitle: "Last updated: 2019-04-18"
+subtitle: "Last updated: 2019-04-19"
 output:
   html_notebook:
     toc: yes
@@ -9,7 +9,7 @@ output:
 always_allow_html: yes
 ---
 
-This is Kara's first pass at analyzing the Spiritual Epidemiology data (with data from 2019-03-08). (Note: PDF printed portrait, 80% zoom, minimum margins.)
+This is Kara's first pass at analyzing the Spiritual Epidemiology data (with data from 2019-03-08). (Note: PDF printed portrait, 90% zoom, default margins.)
 
 ```{r global_options, include = F}
 knitr::opts_chunk$set(fig.width = 4, fig.asp = 0.67,
@@ -37,6 +37,12 @@ d_por <- read.csv("./data_wrangled/d_por.csv", row.names = "X") %>%
                                                 "China", "Vanuatu")))
 
 d_por_scored <- read.csv("./data_wrangled/d_por_scored.csv", row.names = "X") %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
+
+```{r}
+d_prayer <- read.csv("./data_wrangled/d_prayer.csv", row.names = "X") %>%
   mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
                                                 "China", "Vanuatu")))
 ```
@@ -115,7 +121,11 @@ contrasts_ctry_ctr <- cbind("nonUS_US" = c(-4, 1, 1, 1, 1),
 
 # Porosity
 
+For Spiritual Epidemiology, the Porosity scale consisted of 16 basic items, and follow-up questions to a subset of these items. For each of the basic items, participants could respond by saying "it does not happen" (scored as 0), "it might happen" (scored as 0.5), or "it definitely happens" (scored as 1).
+
 ## Overall scores
+
+First, I'll examine overall "scores" on this scale, taking into account only the basic items (not the follow-up questions). Scores could range from 0 (equivalent to saying "it does not happen" for all 16 items) to 16 (equivalent to saying "it definitely happens" for all 16 items).
 
 ```{r}
 d_por_scored_mb <- d_por_scored %>%
@@ -141,10 +151,10 @@ por_plot_a <- ggplot(d_por_scored,
                   color = "black", fatten = 2) +
   geom_text(data = data.frame(x = 0.5,
                               y = c(0*16, 0.5*16, 1*16),
-                              lab = c("~ All answers 'no'",
+                              lab = c("~ All answers 'it does not happen'",
                                       "", 
-                                      # "~ All answers 'maybe'",
-                                      "~ All answers 'yes'")),
+                                      # "~ All answers 'it might happen'",
+                                      "~ All answers 'it definitely happens'")),
             aes(x = x, y = y, label = lab),
             color = "black", hjust = 0, nudge_y = 0.5) +
   scale_color_brewer(palette = "Dark2") +
@@ -164,9 +174,9 @@ por_plot_b <- ggplot(d_por_scored_mb,
   # geom_text(data = data.frame(x = 0.5,
   #                             y = 0.5 * 16, # c(0*16, 0.5*16, 1*16),
   #                             lab = "~ All answers 'maybe'"),
-  #                                   # c("~ All answers 'no'",
-  #                                   #   "~ All answers 'maybe'",
-  #                                   #   "~ All answers 'yes'")),
+  #                                   # c("~ All answers 'it does not happen'",
+  #                                   #   "~ All answers 'it might happen'",
+  #                                   #   "~ All answers 'it definitely happens'")),
   #           aes(x = x, y = y, label = lab), 
   #           color = "black", hjust = 0, nudge_y = 0.5) +
   scale_color_brewer(palette = "Dark2") +
@@ -177,6 +187,8 @@ por_plot_b <- ggplot(d_por_scored_mb,
 
 plot_grid(por_plot_a, por_plot_b, ncol = 2)
 ```
+
+From these plots, it is clear that while there was substantial variability across individuals within each site, participants' average response also varied fairly dramatically across sites, with participants in China endorsing the fewest items, participants in the US and Thailand endorsing slightly more, and participants in Ghana and Vanuatu endorsing the most.
 
 ```{r}
 r_por <- lm(score ~ epi_ctry, d_por_scored,
@@ -192,13 +204,42 @@ summary(r_por)$coefficients %>%
   mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
   mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
          significant = ifelse(p < 0.05, "*", "")) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Comparing porosity scores across sites [model: lm(score ~ epi_ctry, d_por_scored)]") %>%
   kable_styling() %>%
   row_spec(c(2:5), bold = T)
 ```
 
+```{r}
+r_por_mixed <- lmer(response ~ epi_ctry
+                    + (1 | epi_subj) + (epi_ctry | question),
+                    d_por,
+                    contrasts = list(epi_ctry = contrasts_ctry_ctr))
+```
+
+```{r, include = T}
+summary(r_por_mixed)$coefficients %>%
+  data.frame() %>%
+  rownames_to_column("parameter") %>%
+  rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
+         p = Pr...t..) %>%
+  mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
+  mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
+         significant = ifelse(p < 0.05, "*", "")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Comparing porosity responses across sites [model: lmer(response ~ epi_ctry + (1 | epi_subj) + (epi_ctry | question)]") %>%
+  kable_styling() %>%
+  row_spec(c(2:5), bold = T)
+```
+
+I ran two kinds of statistical analyses of these results: One comparing these average scores across sites (top table), and the other taking into account variability across individual participants and across individual items in the scale (bottom table). Theoretically, these analyses should yield pretty similar results, so I would be especially confident in effects that are consistent across the two analyses and that seem obvious from the plots.
+
+Both analyses suggest that participants in sites outside of the US generally had significantly higher Porosity scores than participants in the US (see "epi_ctrynonUS_US" rows)—but looking at the plots it is clear that this was driven by participants in Ghana and Vanuatu, and was not true, on average, among participants in Thailand or China. In line with this, both analyses suggest that participants in Ghana and Vanuatu had significantly higher Porosity scores than participants in Thailand and China—and that this difference was far greater than the difference between "the West vs. the rest" (see "epi_ctrynonUS_US" rows). Both analyses also suggest that participants in Thailand had significantly higher Porosity scores, on average, than participants in China (see "epi_ctryTH_CH" rows).
+
 <P style="page-break-before: always">
 ## By item
+
+Next, I'll examine responses to individual items on the Porosity scale, first focusing on the basic items and then turning to the follow-up questions and a few site-specific questions. For each item, participants could say "it does not happen" (scored as 0), "it might happen" (scored as 0.5), or "it definitely happens" (scored as 1).
 
 ```{r, fig.width = 6, fig.asp = 1, include = T}
 d_por %>%
@@ -224,6 +265,17 @@ d_por %>%
        x = "Site", 
        y = "Mean response (0 = it does not happen, 0.5 = it might happen, 1 = it definitely happens")
 ```
+
+There is so much to unpack here! When I look at these items, a few things that I think about are:
+
+- Which items tend to follow the overall pattern established by the "overall scores" presented in the previous section? (e.g., question #1, many others)
+- Among items that follow the overall pattern, for which items is this pattern exaggerated? (e.g., questions #5, #12) For which items is this pattern attentuated? (e.g., quesitons #2, #3) 
+- Which items do _not_ follow this overall trend? (e.g., question #16)
+- Which items seem to pick out an experience that is uniquely salient/prevalent in a particular site? (e.g., questions #7, #16)
+
+_Note that I just picked out a few examples to illustrate what I mean, but there are certainly other interesting cases that might be worth thinking about more deeply - e.g., question #15, where US participants appear more like Ghanaian & ni-Van participants than Thai or Chinese participants)._ 
+
+Here are participants' answers to the follow-up questions for a subset of those basic items:
 
 ```{r}
 por_fu_question_text <- d_por %>%
@@ -263,6 +315,8 @@ d_por %>%
        y = "Mean response (0 = no, 1 = a little, 2 = a lot)")
 ```
 
+And here are participants' answers to a few site-specific questions:
+
 ```{r}
 por_sitespec_question_text <- d_por %>%
   filter(grepl("usa", question) | grepl("gha", question) |
@@ -300,10 +354,51 @@ d_por %>%
        y = "Mean response (0 = no, 0.5 = maybe, 1 = yes)")
 ```
 
+
+<P style="page-break-before: always">
+# Prayer (spiritual experience Question #1)
+
+For Spiritual Epidemiology, the "spiritual experience" portion of the epidemiology began with two questions intended to gauge participants' prayer practice. Here are participants' responses to these two questions:
+
+```{r, fig.width = 6, fig.asp = 0.35, include = T}
+d_prayer %>%
+  group_by(epi_ctry, question, question_text, order) %>%
+  multi_boot_standard("response", na.rm = T) %>%
+  ungroup() %>% 
+  ggplot(aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  facet_wrap(~ reorder(str_wrap(question_text, 90), order), ncol = 2,
+             scales = "free") +
+  geom_jitter(data = d_prayer, aes(y = response), 
+              height = 0.05, alpha = 0.08, show.legend = F) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper), 
+                  position = position_dodge(width = 0.5), 
+                  color = "black", show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 4, 0.5)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(title = "Prayer",
+       subtitle = "Error bars are bootstrapped 95% CIs\nFor question #1, 0 = no, 1 = yes; for question #1a, 1 = 0-15min, 2 = 15-30min, 3 = 30-60min, 4 = >60min",
+       x = "Site", 
+       y = "Mean response (scales varied by question)")
+```
+
+
 <P style="page-break-before: always">
 # All spiritual experiences (Questions #2-23)
 
+For Spiritual Epidemiology, the Spiritual Experiences scale consisted of 22 basic items (34 basic items in Thailand), and follow-up questions to a subset of these items. For each of the basic items, participants could respond by saying "no" (scored as 0), "maybe" (scored as 0.5; this might have only been available in some sites?), or "yes" (scored as 1).
+
+_Note: In addition to these 22 items, there were two items included as part of this section on "spiritual experiences" that were intended to gauge participants' prayer practice - see [Prayer (spiritual experience Question #1)], above._
+
+## Overall scores
+
+First, I'll examine overall "scores" on this scale, taking into account only the basic items (not the follow-up questions). 
+
+In Thailand, there were an additional 12 quesitons (about experiences of additional "beings") that; I have treated this discrepancy across sites in two different ways below: (1) Consdering all beings and using proportions, rather than sums, as "scores" (equivalent to asking, for each particiant, what proportion of the items they were exposed to did they endorse?); and (2) Considering only the first 5 beings asked about in each site, such that all participants were asked the same number of questions.
+
 ## Considering all "beings"
+
+Using the first approach (considering all "beings," with 12 more beings in Thailand than in any other site), scores could range from 0 (equivalent to saying "no" for all 22-34 items) to 1 (equivalent to saying "yes" for all 22-34 items).
 
 ```{r}
 d_spex_base_q2to23_scored_propall_mb <- d_spex_base_q2to23_scored_propall %>%
@@ -350,6 +445,8 @@ spex_q2to23_plot_b <- ggplot(d_spex_base_q2to23_scored_propall_mb,
 plot_grid(spex_q2to23_plot_a, spex_q2to23_plot_b, ncol = 2)
 ```
 
+From these plots, it is clear that while there was substantial variability across individuals within each site, participants’ average response also varied fairly dramatically across sites, with participants in China endorsing the fewest items, participants in the US and Thailand endorsing slightly more, and participants in Ghana and Vanuatu endorsing the most. This is the same pattern we observed for [Porosity] scores, above.
+
 ```{r}
 r_q2to23_scored_propall <- lm(score ~ epi_ctry, 
                               d_spex_base_q2to23_scored_propall,
@@ -365,19 +462,21 @@ summary(r_q2to23_scored_propall)$coefficients %>%
   mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
   mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
          significant = ifelse(p < 0.05, "*", "")) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Comparing spiritual experience scores across sites [model: lm(score ~ epi_ctry, d_spex_base_q2to23_scored_propall)]") %>%
   kable_styling() %>%
   row_spec(c(2:5), bold = T)
 ```
 
 ```{r}
-r_q2to23_propall <- lmer(response ~ epi_ctry + (1 | epi_subj),
-                         d_spex_base_q2to23,
-                         contrasts = list(epi_ctry = contrasts_ctry_ctr))
+r_q2to23_propall_mixed <- lmer(response ~ epi_ctry 
+                               + (1 | epi_subj) + (epi_ctry | question),
+                               d_spex_base_q2to23,
+                               contrasts = list(epi_ctry = contrasts_ctry_ctr))
 ```
 
-```{r, include = F}
-summary(r_q2to23_propall)$coefficients %>%
+```{r, include = T}
+summary(r_q2to23_propall_mixed)$coefficients %>%
   data.frame() %>%
   rownames_to_column("parameter") %>%
   rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
@@ -385,13 +484,20 @@ summary(r_q2to23_propall)$coefficients %>%
   mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
   mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
          significant = ifelse(p < 0.05, "*", "")) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Comparing spiritual experience responses across sites [model: lmer(response ~ epi_ctry + (1 | epi_subj) + (epi_ctry | question), d_spex_base_q2to23)]") %>%
   kable_styling() %>%
   row_spec(c(2:5), bold = T)
 ```
 
+Again, I ran two kinds of statistical analyses of these results: One comparing these scores across sites (top table), and the other taking into account variability across individual participants and across individual items in the scale (bottom table). Theoretically, these analyses should yield pretty similar results, so I would be especially confident in effects that are consistent across the two analyses and that seem obvious from the plots.
+
+Both analyses suggest that participants in sites outside of the US generally had significantly higher Porosity scores than participants in Ghana and Vanuatu had significantly higher Porosity scores than participants in Thailand and China (see “epi_ctrynonUS_US” rows), and that participants in Thailand had significantly higher Porosity scores, on average, than participants in China (see “epi_ctryTH_CH” rows).
+
 <P style="page-break-before: always">
 ## Considering first five "beings" only
+
+Using the second approach (considering only the first five "beings" in each site), scores could range from 0 (equivalent to saying "no" for all 22 items) to 22 (equivalent to saying "yes" for all 22 items).
 
 ```{r}
 d_spex_base_q2to23_scored_first5_mb <- d_spex_base_q2to23_scored_first5 %>%
@@ -438,8 +544,32 @@ spex_q2to23_plot_d <- ggplot(d_spex_base_q2to23_scored_first5_mb,
 plot_grid(spex_q2to23_plot_c, spex_q2to23_plot_d, ncol = 2)
 ```
 
+These plots look very similar to the plots considering all beings (which I find reassuring).
+
 ```{r}
-r_q2to23_scored_first52 <- lm(response ~ epi_ctry, 
+r_q2to23_scored_first5 <- lm(score ~ epi_ctry, 
+                             d_spex_base_q2to23_scored_first5,
+                             contrasts = list(epi_ctry = contrasts_ctry_ctr))
+```
+
+```{r, include = T}
+summary(r_q2to23_scored_first5)$coefficients %>%
+  data.frame() %>%
+  rownames_to_column("parameter") %>%
+  rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
+         p = Pr...t..) %>%
+  mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
+  mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
+         significant = ifelse(p < 0.05, "*", "")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Comparing spiritual experience scores across sites [model: lm(score ~ epi_ctry, d_spex_base_q2to23_scored_first5)]") %>%
+  kable_styling() %>%
+  row_spec(c(2:5), bold = T)
+```
+
+```{r}
+r_q2to23_first5_mixed <- lmer(response ~ epi_ctry 
+                              + (1 | epi_subj) + (epi_ctry | question),
                               d_spex_base_q2to23 %>%
                                 filter(!question %in% 
                                          c("epi_2_thl12e", "epi_2_thl12f", 
@@ -449,28 +579,8 @@ r_q2to23_scored_first52 <- lm(response ~ epi_ctry,
                               contrasts = list(epi_ctry = contrasts_ctry_ctr))
 ```
 
-```{r, include = T}
-summary(r_q2to23_scored_first52)$coefficients %>%
-  data.frame() %>%
-  rownames_to_column("parameter") %>%
-  rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
-         p = Pr...t..) %>%
-  mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
-  mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
-         significant = ifelse(p < 0.05, "*", "")) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
-  kable_styling() %>%
-  row_spec(c(2:5), bold = T)
-```
-
-```{r}
-r_q2to23_first5 <- lmer(response ~ epi_ctry + (1 | epi_subj),
-                        d_spex_base_q2to23,
-                        contrasts = list(epi_ctry = contrasts_ctry_ctr))
-```
-
 ```{r, include = F}
-summary(r_q2to23_first5)$coefficients %>%
+summary(r_q2to23_first5_mixed)$coefficients %>%
   data.frame() %>%
   rownames_to_column("parameter") %>%
   rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
@@ -478,12 +588,19 @@ summary(r_q2to23_first5)$coefficients %>%
   mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
   mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
          significant = ifelse(p < 0.05, "*", "")) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Comparing spiritual experience responses across sites [model: lmer(response ~ epi_ctry + (1 | epi_subj) + (epi_ctry | question), d_spex_base_q2to23 %>% filter(...))]") %>%
   kable_styling() %>%
   row_spec(c(2:5), bold = T)
 ```
+
+This pattern of results are identical to the pattern of results considering all beings (which, again, I find reassuring).
+
 
 <P style="page-break-before: always">
+**In the following four sections ([Spiritual experiences: Universal questions, set 1 (Questions #2-10)], [Spiritual experiences: Beings questions (Questions #11-15 + more for Thailand)], [Spiritual experiences: Universal questions, set 2 (Questions #16-21)], and [Spiritual experiences: Universal questions, set 3 (Questions #22-23)]), I look at scores for sub-sections of the Spiritual Experience scale, and at responses to individual items in this scale, including follow-up items.** I do not provide text commentary on these additional plots and analyses at this time, but they all follow the same logic as the plots and analyses that I have annotated above.
+
+
 # Spiritual experiences: Universal questions, set 1 (Questions #2-10)
 
 ## Overall scores
@@ -776,10 +893,10 @@ spex_11to15_plot_vt <- d_spex_base_q11to15 %>%
        y = "Mean response (0 = no, 1 = yes)")
 ```
 
-```{r, fig.width = 6, fig.asp = 1.7}
-plot_grid(spex_11to15_plot_us, spex_11to15_plot_gh, spex_11to15_plot_th,
-          spex_11to15_plot_ch, spex_11to15_plot_vt, ncol = 1,
-          rel_heights = c(1, 1, 2, 1, 1))
+```{r, fig.width = 6, fig.asp = 1.7, include = F}
+# plot_grid(spex_11to15_plot_us, spex_11to15_plot_gh, spex_11to15_plot_th,
+#           spex_11to15_plot_ch, spex_11to15_plot_vt, ncol = 1,
+#           rel_heights = c(1, 1, 2, 1, 1))
 ```
 
 ```{r, fig.width = 4, fig.asp = 2, include = T}
@@ -859,7 +976,27 @@ plot_grid(spex_q16to21_plot_a, spex_q16to21_plot_b, ncol = 2)
 <P style="page-break-before: always">
 ## By item
 
-[not yet done]
+```{r, fig.width = 6, fig.asp = 0.7, include = T}
+d_spex_base_q16to21 %>%
+  group_by(epi_ctry, question, question_text, order) %>%
+  multi_boot_standard("response", na.rm = T) %>%
+  ungroup() %>% 
+  ggplot(aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  facet_wrap(~ str_wrap(question_text, 50), ncol = 3) +
+  facet_wrap(~ reorder(str_wrap(question_text, 61), order), ncol = 3) +
+  geom_jitter(data = d_spex_base_q16to21, aes(y = response), 
+              height = 0.05, alpha = 0.08, show.legend = F) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper), 
+                  position = position_dodge(width = 0.5), 
+                  color = "black", show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 1, 0.25)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(title = "Spiritual experiences #16-21: Responses to individual items",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", 
+       y = "Mean response, i.e., proportion responding 'yes' (0 = no, 1 = yes)")
+```
 
 
 <P style="page-break-before: always">
@@ -914,11 +1051,32 @@ plot_grid(spex_q22to23_plot_a, spex_q22to23_plot_b, ncol = 2)
 <P style="page-break-before: always">
 ## By item
 
-[not yet done]
+```{r, fig.width = 6, fig.asp = 0.35, include = T}
+d_spex_base_q22to23 %>%
+  group_by(epi_ctry, question, question_text, order) %>%
+  multi_boot_standard("response", na.rm = T) %>%
+  ungroup() %>% 
+  ggplot(aes(x = epi_ctry, y = mean, color = epi_ctry)) +
+  facet_wrap(~ reorder(str_wrap(question_text, 90), order), ncol = 3) +
+  geom_jitter(data = d_spex_base_q22to23, aes(y = response), 
+              height = 0.05, alpha = 0.08, show.legend = F) +
+  geom_pointrange(aes(ymin = ci_lower, ymax = ci_upper), 
+                  position = position_dodge(width = 0.5), 
+                  color = "black", show.legend = F) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_y_continuous(breaks = seq(0, 1, 0.25)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(title = "Spiritual experiences #22-23: Responses to individual items",
+       subtitle = "Error bars are bootstrapped 95% CIs",
+       x = "Site", 
+       y = "Mean response, i.e., prop. responding 'yes'\n(0 = no, 1 = yes)")
+```
 
 
 <P style="page-break-before: always">
 # Relationships between porosity and spiritual experience
+
+Finally, I will consider the relationship between Porosity scores and Spiritual Experience scores, comparing this relationship across sites and examining this relationship within each site indivdidually. Again, I will explore two ways of handling the discrepancy between questions asked in Thailand vs. other sites.
 
 ## Considering all "beings" (more for Thailand)
 
@@ -929,7 +1087,9 @@ d_por_spex_base_q2to23_propall <- d_spex_base_q2to23_scored_propall %>%
   group_by(epi_ctry) %>%
   mutate(por_score_std = scale(por_score),
          spex_score_propall_std = scale(spex_score_propall)) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(por_score_std_collapse = scale(por_score),
+         spex_score_propall_std_collapse = scale(spex_score_propall))
 
 # effect-code by default
 contrasts(d_por_spex_base_q2to23_propall$epi_ctry) <- contr.sum(5)
@@ -950,6 +1110,50 @@ ggplot(d_por_spex_base_q2to23_propall,
        y = "Spiritual experience\nproportion score (0-1)")
 ```
 
+```{r, fig.width = 4, fig.asp = 0.3, include = T}
+ggplot(d_por_spex_base_q2to23_propall,
+       aes(x = por_score_std_collapse, y = spex_score_propall_std_collapse, 
+           color = epi_ctry)) +
+  facet_wrap(~ epi_ctry, ncol = 5, scales = "free") +
+  geom_point(alpha = 0.2, show.legend = F) +
+  geom_smooth(method = "lm", color = "black", show.legend = F) +
+  scale_x_continuous(breaks = seq(-4, 4, 1)) +
+  scale_y_continuous(breaks = seq(-4, 4, 1)) +
+  scale_color_brewer(palette = "Dark2") +
+    labs(title = "Relationship between porosity and spiritual experience",
+       subtitle = "Includes all beings for Thailand",
+       x = "Porosity score (standardized collapsing across sites)",
+       y = "Spiritual exp. proportion score\n(std. collapsing across sites)")
+```
+
+From the plot, it is clear that there is a general relationship between Porosity and Spiritual Experience scores. The strength of this relationships appears to vary somewhat across sites, but visual inspection suggests that this relationship is present to some degree in each site individually. 
+
+First, I'll look at this relationship considering all sites in the same analysis (standardizing scores collapsing across all sites, to maintain the pattern fo general differences in Porosity and Spiritual Experience across sites):
+
+```{r}
+r_por_spex_propall <- lm(por_score_std_collapse ~ spex_score_propall_std_collapse * epi_ctry,
+                         d_por_spex_base_q2to23_propall,
+                         contrasts = list(epi_ctry = contrasts_ctry_ctr))
+```
+
+```{r, include = T}
+summary(r_por_spex_propall)$coefficients %>%
+  data.frame() %>%
+  rownames_to_column("parameter") %>%
+  rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
+         p = Pr...t..) %>%
+  mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
+  mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
+         significant = ifelse(p < 0.05, "*", "")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Relationship between porosity and spiritual experience, comparing across sites [model: lm(por_score_std_collapse ~ spex_score_propall_std_collapse * epi_ctry, d_por_spex_base_q2to23_propall)]") %>%
+  kable_styling() %>%
+  row_spec(c(2, 7:10), bold = T)
+```
+
+Including all of the data in a single analysis suggests that, collapsing across sites, the relationship between Porosity and Spiritual Experience scores is significantly positive (see "spex_score_propall_std" row in the table above). However, this relationship appears to be significantly weaker among participants outside of the US than it is among US participants (see "spex_score_propall_std:epi_ctrynonUS_US" row), significantly weaker among participants in Ghana and Vanuatu relative to participants in Thailand and China (see "spex_score_propall_std:epi_ctryGHVT_THCH" row), and significantly weaker among participants in Ghana relative to participants in Vanuatu (see "spex_score_propall_std:epi_ctryGH_VT" row). In other words, the relationship between Porosity and Spiritual Experience seems to have been strongest in the US and Chinese samples, weaker in the ni-Van and Thai samples, and weakest in the Ghanaian sample. (This is true even after accounting for overall differences in porosity and spiritual experience across sites.)
+
+<P style="page-break-before: always">
 ```{r, fig.width = 4, fig.asp = 0.3, include = T}
 ggplot(d_por_spex_base_q2to23_propall,
        aes(x = por_score_std, y = spex_score_propall_std, color = epi_ctry)) +
@@ -982,25 +1186,7 @@ ggplot(d_por_spex_base_q2to23_propall %>%
        y = "Spiritual exp. proportion score\n(standardized within each site)")
 ```
 
-```{r}
-r_por_spex_propall <- lm(por_score_std ~ spex_score_propall_std * epi_ctry,
-                        d_por_spex_base_q2to23_propall,
-                        contrasts = list(epi_ctry = contrasts_ctry_ctr))
-```
-
-```{r, include = T}
-summary(r_por_spex_propall)$coefficients %>%
-  data.frame() %>%
-  rownames_to_column("parameter") %>%
-  rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
-         p = Pr...t..) %>%
-  mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
-  mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
-         significant = ifelse(p < 0.05, "*", "")) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
-  kable_styling() %>%
-  row_spec(c(2, 7:10), bold = T)
-```
+Next, I'll look at this relationship considering each sites individually in its own analysis (standardizing scores within each site):
 
 ```{r}
 r_por_spex_propall_us <- lm(por_score_std ~ spex_score_propall_std,
@@ -1051,7 +1237,8 @@ rbind(summary(r_por_spex_propall_us)$coefficients %>%
   mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
          significant = ifelse(p < 0.05, "*", "")) %>%
   select(-site) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Relationship between porosity and spiritual experience, within each site separately [model: lm(por_score_std ~ spex_score_propall_std, d_por_spex_base_q2to23_propall %>% filter(epi_ctry == ...)]") %>%
   kable_styling() %>%
   group_rows("US", 1, 2) %>%
   group_rows("Ghana", 3, 4) %>%
@@ -1061,8 +1248,10 @@ rbind(summary(r_por_spex_propall_us)$coefficients %>%
   row_spec(c(seq(2, 10, 2)), bold = T)
 ```
 
+This analysis suggests that the relationship between Porosity and Spiritual Experience is signficantly positive in all five sites considered individually. The regression coefficients ("b" column in the table above) further confirm that the strength of this relationhip varied across sites: It was strongest in China and the US, middling in Vanuatu and Thailand, and weakest (but still significantly positive) in Ghana.
+
 <P style="page-break-before: always">
-## Considering first five "beings" only
+## Considering first five "beings" for all sites
 
 ```{r}
 d_por_spex_base_q2to23_first5 <- d_spex_base_q2to23_scored_first5 %>% 
@@ -1071,10 +1260,12 @@ d_por_spex_base_q2to23_first5 <- d_spex_base_q2to23_scored_first5 %>%
   group_by(epi_ctry) %>%
   mutate(por_score_std = scale(por_score),
          spex_score_first5_std = scale(spex_score_first5)) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(por_score_std_collapse = scale(por_score),
+         spex_score_first5_std_collapse = scale(spex_score_first5))
 
 # effect-code by default
-contrasts(d_por_spex_base_q2to23_propall$epi_ctry) <- contr.sum(5)
+contrasts(d_por_spex_base_q2to23_first5$epi_ctry) <- contr.sum(5)
 ```
 
 ```{r, fig.width = 4, fig.asp = 0.35, include = F}
@@ -1084,13 +1275,56 @@ ggplot(d_por_spex_base_q2to23_first5,
   geom_point(alpha = 0.2, show.legend = F) +
   geom_smooth(method = "lm", color = "black", show.legend = F) +
   scale_x_continuous(breaks = seq(0, 16, 4)) +
-  scale_y_continuous(breaks = seq(0, 22, 4)) +
+  scale_y_continuous(breaks = seq(0, 22, 2)) +
   scale_color_brewer(palette = "Dark2") +
   labs(title = "Relationship between porosity and spiritual experience",
        subtitle = "Includes first five beings for all sites",
        x = "Porosity score (0-16)",
-       y = "Spiritual experience\nsum score (0-22)")
+       y = "Spiritual exp. sum score (0-22)")
 ```
+
+```{r, fig.width = 4, fig.asp = 0.3, include = T}
+ggplot(d_por_spex_base_q2to23_first5,
+       aes(x = por_score_std_collapse, y = spex_score_first5_std_collapse, 
+           color = epi_ctry)) +
+  facet_wrap(~ epi_ctry, ncol = 5, scales = "free") +
+  geom_point(alpha = 0.2, show.legend = F) +
+  geom_smooth(method = "lm", color = "black", show.legend = F) +
+  scale_x_continuous(breaks = seq(-4, 4, 1)) +
+  scale_y_continuous(breaks = seq(-4, 4, 1)) +
+  scale_color_brewer(palette = "Dark2") +
+    labs(title = "Relationship between porosity and spiritual experience",
+       subtitle = "Includes first five beings for all sites",
+       x = "Porosity score (standardized collapsing across sites)",
+       y = "Spiritual exp. sum score\n(std. collapsing across sites)")
+```
+
+Again, it is clear from the plot that there is a general relationship between Porosity and Spiritual Experience scores, and the strength of this relationships appears to vary somewhat across sites. 
+
+First, I'll look at this relationship considering all sites in the same analysis (standardizing scores collapsing across all sites, to maintain the pattern fo general differences in Porosity and Spiritual Experience across sites):
+
+```{r}
+r_por_spex_first5 <- lm(por_score_std_collapse ~ spex_score_first5_std_collapse * epi_ctry,
+                         d_por_spex_base_q2to23_first5,
+                         contrasts = list(epi_ctry = contrasts_ctry_ctr))
+```
+
+```{r, include = T}
+summary(r_por_spex_first5)$coefficients %>%
+  data.frame() %>%
+  rownames_to_column("parameter") %>%
+  rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
+         p = Pr...t..) %>%
+  mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
+  mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
+         significant = ifelse(p < 0.05, "*", "")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Relationship between porosity and spiritual experience, comparing across sites [model: lm(por_score_std_collapse ~ spex_score_first5_std_collapse * epi_ctry, d_por_spex_base_q2to23_first5)]") %>%
+  kable_styling() %>%
+  row_spec(c(2, 7:10), bold = T)
+```
+
+This analysis is virtually identical to the parallel analysis using proportion scores, above—with the additional suggestion that the relationship was significantly weaker among participants in Thailand than participants in China (see "spex_score_first5_std:epi_ctryTH_CH" row in table above).
 
 ```{r, fig.width = 4, fig.asp = 0.3, include = T}
 ggplot(d_por_spex_base_q2to23_first5,
@@ -1101,10 +1335,10 @@ ggplot(d_por_spex_base_q2to23_first5,
   # scale_x_continuous(breaks = seq(0, 16, 4)) +
   # scale_y_continuous(breaks = seq(0, 22, 4)) +
   scale_color_brewer(palette = "Dark2") +
-  labs(title = "Relationship between porosity and spiritual experience",
+    labs(title = "Relationship between porosity and spiritual experience",
        subtitle = "Includes first five beings for all sites",
        x = "Porosity score (standardized within each site)",
-       y = "Spiritual experience sum score\n(standardized within each site)")
+       y = "Spiritual exp. sum score\n(standardized within each site)")
 ```
 
 ```{r, fig.width = 4, fig.asp = 0.35, include = F}
@@ -1121,28 +1355,10 @@ ggplot(d_por_spex_base_q2to23_first5 %>%
   labs(title = "Relationship between porosity and spiritual experience",
        subtitle = "Includes first five beings for all sites\nExcluding outliers (z > 2 or z < -2)",
        x = "Porosity score (standardized within each site)",
-       y = "Spiritual experience sum score\n(standardized within each site)")
+       y = "Spiritual exp. sum score\n(standardized within each site)")
 ```
 
-```{r}
-r_por_spex_first5 <- lm(por_score_std ~ spex_score_first5_std * epi_ctry,
-                        d_por_spex_base_q2to23_first5,
-                        contrasts = list(epi_ctry = contrasts_ctry_ctr))
-```
-
-```{r, include = T}
-summary(r_por_spex_first5)$coefficients %>%
-  data.frame() %>%
-  rownames_to_column("parameter") %>%
-  rename(b = Estimate, `standard error` = Std..Error, `t` = t.value,
-         p = Pr...t..) %>%
-  mutate_at(vars(-parameter, -p), funs(round(., 2))) %>%
-  mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
-         significant = ifelse(p < 0.05, "*", "")) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
-  kable_styling() %>%
-  row_spec(c(2, 7:10), bold = T)
-```
+Next, I'll look at this relationship considering each sites individually in its own analysis (standardizing scores within each site):
 
 ```{r}
 r_por_spex_first5_us <- lm(por_score_std ~ spex_score_first5_std,
@@ -1193,7 +1409,8 @@ rbind(summary(r_por_spex_first5_us)$coefficients %>%
   mutate(p = ifelse(p < 0.001, "<0.001", round(p, 3)),
          significant = ifelse(p < 0.05, "*", "")) %>%
   select(-site) %>%
-  kable(align = c("l", rep("r", 5), "l")) %>%
+  kable(align = c("l", rep("r", 5), "l"),
+        caption = "Relationship between porosity and spiritual experience, within each site separately [model: lm(por_score_std ~ spex_score_first5_std, d_por_spex_base_q2to23_first5 %>% filter(epi_ctry == ...)]") %>%
   kable_styling() %>%
   group_rows("US", 1, 2) %>%
   group_rows("Ghana", 3, 4) %>%
@@ -1202,3 +1419,7 @@ rbind(summary(r_por_spex_first5_us)$coefficients %>%
   group_rows("Vanuatu", 9, 10) %>%
   row_spec(c(seq(2, 10, 2)), bold = T)
 ```
+
+As with the analysis of proportion scores, this analysis suggests that the relationship between Porosity and Spiritual Experience is signficantly positive in all five sites considered individually, and the regression coefficients ("b" column in the table above) further confirm that this relationhip was strongest in China and the US, middling in Vanuatu and Thailand, and weakest (but still significantly positive) in Ghana.
+
+

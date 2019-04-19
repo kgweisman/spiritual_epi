@@ -2290,6 +2290,21 @@ d_spex <- d0_epi_2 %>%
 ```
 
 ```{r}
+d_prayer <- d0_epi_2 %>%
+  select(epi_ctry, epi_subj, ends_with("_num")) %>%
+  gather(question, response, -c(epi_ctry, epi_subj)) %>%
+  mutate(question = gsub("_num", "", question)) %>%
+  filter(grepl("epi_2_01", question)) %>%
+  left_join(var_key) %>%
+  mutate(epi_ctry = factor(epi_ctry, levels = c("US", "Ghana", "Thailand", 
+                                                "China", "Vanuatu")))
+```
+
+```{r}
+write.csv(d_prayer, "data_wrangled/d_prayer.csv")
+```
+
+```{r}
 d_spex_base_q2to23 <- d_spex %>%
   filter(question %in% c(
     # universal set 1
