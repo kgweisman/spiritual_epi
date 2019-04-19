@@ -2312,7 +2312,7 @@ d_spex_base_q2to23 <- d_spex %>%
     "epi_2_16", "epi_2_17", "epi_2_18", "epi_2_19", "epi_2_20", "epi_2_21",
     # universal set 3
     "epi_2_22", "epi_2_23")) %>%
-  select(-order) %>%
+  # select(-order) %>%
   distinct()
 ```
 
@@ -2342,7 +2342,7 @@ d_spex_base_q2to10 <- d_spex %>%
   filter(question %in% c("epi_2_02", "epi_2_03", "epi_2_04", "epi_2_05", 
                          "epi_2_06", "epi_2_07", "epi_2_08", "epi_2_09",
                          "epi_2_10")) %>%
-  select(-order) %>%
+  # select(-order) %>%
   distinct()
 ```
 
@@ -2435,7 +2435,7 @@ d_spex_base_q11to15 <- d_spex %>%
     question %in% c("epi_2_gha14", "epi_2_chn14", "epi_2_thl11", 
                     "epi_2_thl12c", "epi_2_thl12d", "epi_2_thl12g") 
     ~ "other/general")) %>%
-  select(-order) %>%
+  # select(-order) %>%
   distinct()
 ```
 
@@ -2463,7 +2463,7 @@ write.csv(d_spex_base_q11to15_scored,
 d_spex_base_q16to21 <- d_spex %>%
   filter(question %in% c("epi_2_16", "epi_2_17", "epi_2_18", "epi_2_19",
                          "epi_2_20", "epi_2_21")) %>%
-  select(-order) %>%
+  # select(-order) %>%
   distinct()
 ```
 
@@ -2482,7 +2482,7 @@ write.csv(d_spex_base_q16to21_scored,
 ```{r}
 d_spex_base_q22to23 <- d_spex %>%
   filter(question %in% c("epi_2_22", "epi_2_23")) %>%
-  select(-order) %>%
+  # select(-order) %>%
   distinct()
 ```
 
