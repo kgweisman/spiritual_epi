@@ -2247,6 +2247,16 @@ d0_epi_demo <- d00 %>%
   # arrange(epi_ctry, epi_subj, epi_batc, question)
 ```
 
+```{r}
+d_demo <- d0_epi_demo %>%
+  full_join(d0_epi_entry) %>%
+  select(-c(epi_entr, epi_2day, epi_batc, epi_file, 
+            contains("_phn_"), contains("_email_"))) %>%
+  distinct()
+
+write.csv(d_demo, "./data_wrangled/d_demo.csv")
+```
+
 # Porosity
 
 ```{r}
